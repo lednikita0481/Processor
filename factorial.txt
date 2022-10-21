@@ -1,0 +1,38 @@
+jmp begin
+
+fact:
+    push bx
+    push 1
+    jbe e_fact
+
+    pop cx
+    pop cx
+    push ax
+    push bx
+    push -1
+    add
+    pop bx
+    push bx
+    mul
+    pop ax
+    call fact
+    jmp end
+
+
+    e_fact:
+    pop cx
+    pop cx
+    end:
+RET
+
+
+begin:
+in
+pop ax
+push ax
+pop bx
+call fact
+
+push ax
+out
+hlt

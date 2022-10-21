@@ -1,0 +1,134 @@
+jmp begin
+
+norm_eq:
+    push bx
+    push bx
+    mul
+    push -4
+    push ax
+    mul
+    push cx
+    mul
+    add
+    push 0
+    jb negative_d
+
+
+
+    pop [3]
+    sqrt
+    pop dx
+
+    push -1
+    push bx
+    mul
+    push dx
+    add
+    push 2
+    push ax
+    mul
+    div
+    pop [1]
+
+    push -1
+    push bx
+    mul
+    push dx
+    push -1
+    mul
+    add
+    push 2
+    push ax
+    mul
+    div
+    pop [2]
+    jmp finish_norm_eq
+
+
+    negative_d:
+    pop [3]
+    pop [3]
+    push -911
+    pop [1]
+    push -911
+    pop [2]
+    jmp finish_norm_eq
+
+    finish_norm_eq:
+    push [1]
+    push [2]
+RET
+
+dich_eq:
+    push bx
+    push 0
+    je wtf
+
+    pop [3]
+    pop [3]
+    push cx
+    push bx
+    div
+    pop [1]
+    push [1]
+    pop [2]
+    jmp finish_dich_eq
+
+
+    wtf:
+    pop [3]
+    pop [3]
+    push cx
+    push 0
+    je wtf_ok
+
+    pop [3]
+    pop [3]
+    push -911
+    pop [1]
+    push -911
+    pop [2]
+    jmp finish_dich_eq
+
+
+    wtf_ok:
+    pop [3]
+    pop [3]
+    push 911
+    pop [1]
+    push 911
+    pop [2]
+    jmp finish_dich_eq
+
+    finish_dich_eq:
+    push [1]
+    push [2]
+RET
+
+
+begin:
+in
+pop ax
+in
+pop bx
+in
+pop cx
+push ax
+push 0
+ja norm_eq_do
+
+pop [3]
+pop [3]
+call dich_eq
+jmp end
+
+norm_eq_do:
+pop [3]
+pop [3]
+call norm_eq
+jmp end
+
+end:
+out
+out
+hlt
