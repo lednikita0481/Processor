@@ -116,7 +116,7 @@ Elem_t StackPop(Stack *stk)
         Stack_Calculate_Hash(stk);
     #endif
 
-    if ((stk->size) * 4 <= stk->capacity && stk->capacity > 1)
+    if ((stk->size) * 4 <= stk->capacity && stk->capacity > 5)
     {
         StackRealloc(stk);
     }
@@ -352,7 +352,7 @@ void StackDuump(Stack* stk, int error, const char* func, const char* file, const
 
         for (int i = 0; i < stk->capacity; i++)
         {
-            fprintf(File, "        %c[%d] = %lf      %s\n", ((i<stk->size)? '*' : ' '), i, stk->data[i], ((stk->data[i] == ReturnPoison(stk->data[i]))? "(POISON)" : " "));
+            fprintf(File, "        %c[%d] = %d      %s\n", ((i<stk->size)? '*' : ' '), i, stk->data[i], ((stk->data[i] == ReturnPoison(stk->data[i]))? "(POISON)" : " "));
         }
 
         fprintf(File, "    }\n");

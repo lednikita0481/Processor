@@ -44,7 +44,7 @@ DEF_CMD(mul, 5, 0,
     {
         int a = StackPop(stk);
         int b = StackPop(stk);
-        StackPush(stk, (((a) * (b))/ACCURACY));
+        StackPush(stk, (((a/ACCURACY) * (b))));
         cpu->ip += sizeof(char);
     })
 
@@ -68,6 +68,8 @@ DEF_CMD(jmp, 7, 0,
 
 DEF_CMD(jb, 8, 0,
     {
+        printf("Iteration number %d\n", iii);
+        iii++;
         int a = StackPop(stk);
         int b = StackPop(stk);
         if (b < a) cpu->ip = *((int*)(cpu->code + cpu->ip + sizeof(char)));
@@ -158,5 +160,46 @@ DEF_CMD(sqrt, 18, 0,
         int a = StackPop(stk);
         int b = (int)(ACCURACY * sqrt(a / ACCURACY));
         StackPush(stk, b);
+        cpu->ip += sizeof(char);
+    })
+
+DEF_CMD(ram, 19, 0, 
+    {
+        Print_Memory(cpu);
+        cpu->ip += sizeof(char);
+    })
+
+DEF_CMD(mod, 20, 0,
+    {
+        int a = StackPop(stk);
+        int b = StackPop(stk);
+        int c = (b/ACCURACY) % (a/ACCURACY);
+        if (a == 0)
+        {
+            printf("impossible to divide by zero");
+            exit(DIV_BY_ZERO);
+        }
+        StackPush(stk, c*ACCURACY);
+        cpu->ip += sizeof(char);
+    })
+
+DEF_CMD(divv, 21, 0,
+    {
+        int a = StackPop(stk);
+        int b = StackPop(stk);
+        if (a == 0)
+        {
+            printf("impossible to divide by zero");
+            exit(DIV_BY_ZERO);
+        }
+        StackPush(stk, (b / a)*ACCURACY);
+        cpu->ip += sizeof(char);
+    })
+
+DEF_CMD(copy, 22, 0, 
+    {
+        int a = StackPop(stk);
+        StackPush(stk, a);
+        StackPush(stk, a);
         cpu->ip += sizeof(char);
     })

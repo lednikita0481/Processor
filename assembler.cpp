@@ -5,8 +5,8 @@
 #include <sys\stat.h>
 #include <ctype.h>
 
-#include "config.h"
-#include "stack.h"
+//#include "config.h"
+//#include "stack.h"
 #include "assembler.h"
 
 int main(int argc, char* argv[])
@@ -176,7 +176,7 @@ void add_reg(char* code, size_t* pointer, char* registr, int line)
 {
     int reg_num = int(registr[0]-'a');
 
-    if (reg_num > 5)
+    if (reg_num > 10)
     {
         Errors_Processing(REGISTER_ERROR, line);
     }

@@ -5,7 +5,10 @@
 #include <sys\stat.h>
 #include <ctype.h>
 #include <math.h>
+#include <windows.h>
+#include <unistd.h>
 
+//#include "TXLib.h"
 #include "config.h"
 #include "stack.h"
 #include "CPU.h"
@@ -83,11 +86,12 @@ void CPU_Ctor(struct CPU* cpu)
 
 void Do_What_Said(struct CPU* cpu, Stack* stk, Stack* call_adress_stk)
 {
+    int iii = 0;
     int n;
     #define DEF_CMD(name, num, arg, ...)\
         case  cmd_##name:               \
             n = cmd_##name;             \
-            printf("I'm in command %d, byte it points is %d\n\n", n, *(cpu->code + cpu->ip));\
+            /*printf("I'm in a command %d pointer is %d\n\n", *(cpu->code + cpu->ip), cpu->ip);*/\
             __VA_ARGS__                 \
             break;                      
 
@@ -123,7 +127,7 @@ int* Get_arg(struct CPU* cpu)
 
         if ((*(cpu->code + cpu->ip) & (1 << reg)) != 0)
         {
-            memory_cell += cpu->regs[*(int*)(cpu->code + cpu->ip + current_ip)];
+            memory_cell += cpu->regs[*(int*)(cpu->code + cpu->ip + current_ip)]/ACCURACY;
             current_ip += sizeof(int);
         }
 
@@ -165,7 +169,55 @@ int* Get_arg(struct CPU* cpu)
     return arg;
 }
 
+void Print_Memory(struct CPU* cpu)
+{
+    ClearScreen();
+    for (int i = 0; i < MEMORY_SIZE; i++)
+    {
+        if (*(cpu->RAM + i) == 0) printf(". ");
+        else printf("# ");
+        
+        if ((i+1)%100 == 0) printf("\n");
+    }
+    //sleep(1);
+}
 
+void ClearScreen()
+  {
+  HANDLE                     hStdOut;
+  CONSOLE_SCREEN_BUFFER_INFO csbi;
+  DWORD                      count;
+  DWORD                      cellCount;
+  COORD                      homeCoords = { 0, 0 };
+
+  hStdOut = GetStdHandle( STD_OUTPUT_HANDLE );
+  if (hStdOut == INVALID_HANDLE_VALUE) return;
+
+  /* Get the number of cells in the current buffer */
+  if (!GetConsoleScreenBufferInfo( hStdOut, &csbi )) return;
+  cellCount = csbi.dwSize.X *csbi.dwSize.Y;
+
+  /* Fill the entire buffer with spaces */
+  if (!FillConsoleOutputCharacter(
+    hStdOut,
+    (TCHAR) ' ',
+    cellCount,
+    homeCoords,
+    &count
+    )) return;
+
+  /* Fill the entire buffer with the current colors and attributes */
+  if (!FillConsoleOutputAttribute(
+    hStdOut,
+    csbi.wAttributes,
+    cellCount,
+    homeCoords,
+    &count
+    )) return;
+
+  /* Move the cursor home */
+  SetConsoleCursorPosition( hStdOut, homeCoords );
+  }
 
 void Errors_Processing(int Err)
 {

@@ -1,2 +1,2 @@
-typedef double Elem_t;
-#define NDEBUG
+typedef int Elem_t;
+//#define NDEBUG
