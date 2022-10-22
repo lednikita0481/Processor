@@ -7,6 +7,8 @@ struct CPU
     int*   RAM;
     int     ip;
     int pointer_max;
+    Stack stk = {};
+    Stack call_adress_stk = {};
 };
 
 
@@ -21,6 +23,7 @@ enum Commands
 const int SIGNATURE_LEN = 8;
 const char* NEEDED_SIGNATURE = "ASS.300";
 const int MEMORY_SIZE = 5000;
+const int WINDOW_WIDTH = 100;
 const int REG_SIZE = 10;
 const char CMD_MASK = 31; //11111
 const int ACCURACY = 1;
@@ -54,7 +57,7 @@ enum shift
 void Get_Code(struct CPU* cpu, char* inp_file_name);
 void Check_Signature(FILE* code_file);
 void CPU_Ctor(struct CPU* cpu);
-void Do_What_Said(struct CPU* cpu, Stack* stk, Stack* call_adress_stk);
+void Do_What_Said(struct CPU* cpu);
 int* Get_arg(struct CPU* cpu);
 void Print_Memory(struct CPU* cpu);
 void ClearScreen();

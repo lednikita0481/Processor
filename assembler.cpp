@@ -5,8 +5,6 @@
 #include <sys\stat.h>
 #include <ctype.h>
 
-//#include "config.h"
-//#include "stack.h"
 #include "assembler.h"
 
 int main(int argc, char* argv[])
@@ -27,11 +25,11 @@ int main(int argc, char* argv[])
 
     struct label labels[LABELS_NUM];
 
-    Return_Code(&text, labels, output_file_name);
+    Get_Code(&text, labels, output_file_name);
 
-    Read_From_File(&text, inp_file_name);
-    Lines_Connecter(&text);
-    Return_Code(&text, labels, output_file_name);
+    //Read_From_File(&text, inp_file_name);
+    //Lines_Connecter(&text);
+    Get_Code(&text, labels, output_file_name);
 }
 
 void Read_From_File(struct Commands_Info* text, char* inp_file_name)
@@ -43,10 +41,15 @@ void Read_From_File(struct Commands_Info* text, char* inp_file_name)
         Errors_Processing(NO_SOURCE_FILE);
     }
 
-    struct stat file;
+    struct stat file = {};
     stat(inp_file_name, &file);
     text->buffer = (char* )calloc(file.st_size, sizeof(char));
+
+    assert(text->buffer != NULL);
+
     text->size = fread(text->buffer, sizeof(char), file.st_size, source);
+
+    fclose(source);
 
     text->lines_amount = 0;
     for (size_t i = 0; i < text->size; i++)
@@ -82,10 +85,11 @@ void Lines_Connecter(struct Commands_Info* text)
 void Get_arg(char* Line, char* code, size_t* pointer, int name, int line)
 {
     printf("Get arg scuco\n");
-    Reach_Value(&Line);
+    Reach_Space(&Line);
+    Skip_Spaces(&Line);
 
     int value = 0;
-    char registr[4] = {};
+    char registr[4] = { 0 };
 
     if (sscanf(Line, " [%d + %s", &value, registr) == 2)     //[10 + ax]
     {
@@ -93,11 +97,10 @@ void Get_arg(char* Line, char* code, size_t* pointer, int name, int line)
         add_comm_name(code, pointer, name, 1, 1, 1);
         add_imm_const(code, pointer, value);
         add_reg(code, pointer, registr, line);
-
         return;
     }
 
-    else if (sscanf(Line, " [%d", &value) == 1)   //[10]
+    else if (sscanf(Line, "[%d", &value) == 1)   //[10]
     {
         printf("Get arg type [10], value = %d\n", value);
         add_comm_name(code, pointer, name, 1, 0, 1);
@@ -105,12 +108,11 @@ void Get_arg(char* Line, char* code, size_t* pointer, int name, int line)
         return;
     }
 
-    else if (sscanf(Line, " [%s", registr) == 1)   //[ax]
+    else if (sscanf(Line, "[%s", registr) == 1)   //[ax]
     {
         printf("Get arg type [ax]\n");
         add_comm_name(code, pointer, name, 1, 1, 0);
         add_reg(code, pointer, registr, line);
-
         return;
     }
 
@@ -126,7 +128,6 @@ void Get_arg(char* Line, char* code, size_t* pointer, int name, int line)
         add_comm_name(code, pointer, name, 0, 1, 1);
         add_imm_const(code, pointer, value);
         add_reg(code, pointer, registr, line);
-
         return;
     }
 
@@ -186,7 +187,7 @@ void add_reg(char* code, size_t* pointer, char* registr, int line)
 }
 
 
-void Return_Code(struct Commands_Info* text, struct label* labels, char* output_file_name)
+void Get_Code(struct Commands_Info* text, struct label* labels, char* output_file_name)
 {
     printf("ass 5\n");
 
@@ -206,74 +207,7 @@ void Return_Code(struct Commands_Info* text, struct label* labels, char* output_
     printf("ass 51\n");
 
     size_t line = 0;
-    size_t pointer = 0;
-
-    #define DEF_CMD(name, num, arg, ...)                            \
-            else if (stricmp(command, #name) == 0)                  \
-            {                                                       \
-                if (arg)                                            \
-                {                                                   \
-                    char* Line = text->lines[line];                 \
-                    printf("Line in push pop is %s\n", Line);       \
-                    int Com_Name = cmd_##name;                      \
-                    Get_arg(Line, code, &pointer, Com_Name, line);  \
-                    line++;                                         \
-                }                                                   \
-                else                                                \
-                {                                                   \
-                    int Com_Name = cmd_##name;                      \
-                    *(code + pointer) = char(Com_Name);             \
-                    pointer += sizeof(char);                        \
-                    line++;                                         \
-                }                                                   \
-            }
-
-    #define DEF_JMP(c_name)                                         \
-        else if (stricmp(command, #c_name) == 0)                    \
-        {                                                           \
-            printf("Trying to add label\n");                        \
-            char* Line = text->lines[line];                         \
-            Reach_Value(&Line);                                     \
-                                                                    \
-            char name[LABEL_NAME_LEN] = {};                         \
-                                                                    \
-            if (sscanf(Line, "%s", name) == 1)                      \
-            {                                                       \
-                printf("label has a name\n");                       \
-                                                                    \
-                int Com_Name = cmd_##c_name;                        \
-                *(code + pointer) = char(Com_Name);                 \
-                                                                    \
-                pointer += sizeof(char);                            \
-                                                                    \
-                bool found = false;                                 \
-                for (int i = 0; i < LABELS_NUM; i++)                \
-                {                                                   \
-                    if (stricmp(name, labels[i].name) == 0)         \
-                    {                                               \
-                        found = true;                               \
-                        *((int*)(code+pointer)) = labels[i].line;   \
-                        printf("\nI found label number %d, pointer it has %d\n\n", i, labels[i].line);\
-                        break;                                      \
-                    }                                               \
-                }                                                   \
-                                                                    \
-                if (!found)                                         \
-                {                                                   \
-                    *((int*)(code+pointer)) = LABEL_POISON;         \
-                }                                                   \
-                                                                    \
-                pointer += sizeof(int);                             \
-            }                                                       \
-                                                                    \
-            else                                                    \
-            {                                                       \
-                Errors_Processing(JMP_ERROR, line);                 \
-            }                                                       \
-                                                                    \
-            line++;                                                 \
-        }                                                           
-
+    size_t pointer = 0;                                                           
 
     while (line < text->lines_amount)
     {
@@ -328,10 +262,33 @@ void Return_Code(struct Commands_Info* text, struct label* labels, char* output_
             line++;
         }
     }
-
     #undef DEF_CMD
 
+    Out_Code(code, output_file_name, pointer);
+    printf("ass6\n");
 
+    free(text->buffer);
+    free(text->lines);
+}
+
+
+void Reach_Space(char** ptr){
+    while (((**ptr) != '\0') && ((**ptr) != ' '))
+    {
+        (*ptr)++;
+    }
+}
+
+void Skip_Spaces(char** ptr)
+{
+    while ((**ptr) == ' ')
+    {
+        (*ptr)++;
+    }
+}
+
+void Out_Code(char* code, char* output_file_name, size_t pointer)
+{
     FILE* out_file = NULL;
     if ((out_file = fopen(output_file_name, "wb")) == NULL)
     {
@@ -346,20 +303,28 @@ void Return_Code(struct Commands_Info* text, struct label* labels, char* output_
         fprintf(out_file, "%c", code[i]);
     }
     fclose(out_file);
-
-    printf("ass6\n");
-
-    free(text->buffer);
-    free(text->lines);
-
 }
 
-
-void Reach_Value(char** ptr){
-    while (((**ptr) != '\0') && ((**ptr) != ' '))
-    {
-        (*ptr)++;
-    }
+void find_label(char* name, struct label* labels, char* code, size_t* pointer)
+{
+    bool found = false;                                 
+    for (int i = 0; i < LABELS_NUM; i++)                
+    {                                                  
+        if (stricmp(name, labels[i].name) == 0)         
+        {                                               
+            found = true;                               
+            *((int*)(code+(*pointer))) = labels[i].line;   
+            printf("\nI found label number %d, pointer it has %d\n\n", i, labels[i].line);
+            break;                                      
+        }                                               
+    }                                                   
+                                                            
+    if (!found)                                         
+    {                                                   
+        *((int*)(code+(*pointer))) = LABEL_POISON;         
+    }                                                   
+                                                            
+    *(pointer) += sizeof(int);   
 }
 
 

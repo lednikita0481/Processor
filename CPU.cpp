@@ -24,14 +24,13 @@ int main(int argc, char* argv[])
     char* inp_file_name = argv[1];
 
     struct CPU cpu = {};
-    Stack stk = {};
-    Stack call_adress_stk = {};
-    StackCtor(&stk, 10);
-    StackCtor(&call_adress_stk, 5);
+    
+    StackCtor(&cpu.stk, 10);
+    StackCtor(&cpu.call_adress_stk, 5);
 
     Get_Code(&cpu, inp_file_name);
 
-    Do_What_Said(&cpu, &stk, &call_adress_stk);
+    Do_What_Said(&cpu);
 
     return 0;
 }
@@ -84,13 +83,13 @@ void CPU_Ctor(struct CPU* cpu)
     cpu->ip = 0;
 }
 
-void Do_What_Said(struct CPU* cpu, Stack* stk, Stack* call_adress_stk)
+void Do_What_Said(struct CPU* cpu)
 {
     int iii = 0;
-    int n;
+    int n = 0;
     #define DEF_CMD(name, num, arg, ...)\
         case  cmd_##name:               \
-            n = cmd_##name;             \
+            n == cmd_##name;            \
             /*printf("I'm in a command %d pointer is %d\n\n", *(cpu->code + cpu->ip), cpu->ip);*/\
             __VA_ARGS__                 \
             break;                      
@@ -177,7 +176,7 @@ void Print_Memory(struct CPU* cpu)
         if (*(cpu->RAM + i) == 0) printf(". ");
         else printf("# ");
         
-        if ((i+1)%100 == 0) printf("\n");
+        if ((i+1)%WINDOW_WIDTH == 0) printf("\n");
     }
     //sleep(1);
 }
